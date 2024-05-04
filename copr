@@ -4,11 +4,11 @@
 author="$(echo $2 | cut -d '/' -f1)"
 repo_name="$(echo $2 | cut -d '/' -f2)"
 release_ver="$(rpm -E %fedora)"
-repo_file="/etc/yum.repos.d/_copr_$author-$repo_name.repo"
+repo_file="/etc/yum.repos.d/_copr_${author}-${repo_name}.repo"
 logged_in_user=$(logname)
 logged_in_home=$(eval echo ~$logged_in_user)
 backup_dir="${logged_in_home}/.copr"
-repo_file_bak="${backup_dir}/_copr_$author-$repo_name.repo"
+repo_file_bak="${backup_dir}/_copr_${author}-${repo_name}.repo"
 
 # the original copr warning message
 question=$(cat <<EOF
@@ -23,7 +23,7 @@ and packages are not held to any quality or security level.
 Please do not file bug reports about these packages in Fedora
 Bugzilla. In case of problems, contact the owner of this repository.
 
-Do you really want to enable copr.fedorainfracloud.org/$author/$repo_name? [y/N]:
+Do you really want to enable copr.fedorainfracloud.org/${author}/${repo_name}? [y/N]:
 EOF
 )
 
@@ -77,8 +77,8 @@ if [[ "$1" == "enable" ]]; then
 		read -p "$question" yn
 		case $yn in
 			[Yy]*)
-				echo "$author/$repo_name -> $release_ver"
-				curl -fsSL https://copr.fedorainfracloud.org/coprs/$author/$repo_name/repo/fedora-$release_ver/$author-$repo_name-fedora-.repo | pkexec tee $repo_file && break
+				echo "${author}/${repo_name} -> ${release_ver}"
+				curl -fsSL https://copr.fedorainfracloud.org/coprs/${author}/${repo_name}/repo/fedora-${release_ver}/${author}-${repo_name}-fedora-.repo | pkexec tee "$repo_file" && break
 				;;
 			*)
 				echo "Unknown option, exiting."; exit 1
@@ -89,34 +89,34 @@ if [[ "$1" == "enable" ]]; then
 # remove the named repo
 elif [[ "$1" == "remove" ]]; then
 	# backup the repo_file and change owner to user
-	mkdir -p $backup_dir
+	mkdir -p "$backup_dir"
 
 	if [[ -e "$repo_file" ]]; then
 		# Backup existing repo file and set ownership to the user
-		pkexec cp $repo_file $repo_file_bak \
-		&& pkexec chown $logged_in_user $repo_file_bak \
+		pkexec cp "$repo_file" "$repo_file_bak" \
+		&& pkexec chown "$logged_in_user" "$repo_file_bak" \
 		&& echo "Backup created in your home folder."
 
 		# Remove the repo file
-		pkexec rm $repo_file \
-		&& echo "COPR Repository $author/$repo_name removed." \
+		pkexec rm "$repo_file" \
+		&& echo "COPR Repository ${author}/${repo_name} removed." \
 		|| echo "ERROR removing COPR repository."
   	else
 		# search for the repo_name
-		echo "Repo with name $author/$repo_name not found, trying a search..."
+		echo "Repo with name ${author}/${repo_name} not found, trying a search..."
 
 		result=$(grep -ril --include='*.repo' "$repo_name" /etc/yum.repos.d/)
 		# if not found, exit
 		if [[ -z "$result" ]]; then
-			echo "No repositories containing '$repo_name' were found."
+			echo "No repositories containing '${repo_name}' were found."
 	  	else
 			# if found, make sure it is the right one
-			read -rp "Repo '$result' was found. Do you want to backup and remove this repo? (Y/N) " answer
+			read -rp "Repo '${result}' was found. Do you want to backup and remove this repo? (Y/N) " answer
 			if [[ "${answer,,}" == "y" ]]; then
 				pkexec cp "$result" "$repo_file_bak" \
 				&& pkexec chown "$(whoami)" "$repo_file_bak" \
 				&& pkexec rm "$result" \
-				&& echo "COPR Repository '$repo_name' removed." \
+				&& echo "COPR Repository '${repo_name}' removed." \
 				|| echo "ERROR removing COPR repository."
 			fi
 	  	fi
@@ -132,14 +132,14 @@ elif [[ "$1" == "search" ]]; then
 
 # disable a repo
 elif [[ "$1" == "disable" ]]; then
-	sed 's/enabled=1/enabled=0/g' $repo_file > /dev/null \
-	&& echo "Repository $author/$repo_name disabled." \
+	sed 's/enabled=1/enabled=0/g' "$repo_file" > /dev/null \
+	&& echo "Repository ${author}/${repo_name} disabled." \
 	|| echo "Already disabled or repo not found."
 
 # enable a repo
 elif [[ "$1" == "enable" ]]; then
-	sed 's/enabled=0/enabled=1/g' $repo_file > /dev/null \
-	&& echo "Repository $author/$repo_name enabled" \
+	sed 's/enabled=0/enabled=1/g' "$repo_file" > /dev/null \
+	&& echo "Repository ${author}/${repo_name} enabled" \
 	|| echo "Already enabled or repo not found."
 
 fi
