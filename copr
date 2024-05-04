@@ -35,9 +35,6 @@ help=$(cat << EOF
 This Tool is not made or supported by the Fedora Project,
 but aims to reproduce the "dnf copr" functionalities for easily adding COPRs.
 
-Usage: ./copr [OPTION] [ARGUMENT]
-
-
 Usage: copr [OPTION] [ARGUMENT]
 
 Options:
@@ -63,8 +60,18 @@ For help, visit https://discussion.fedoraproject.org.
 EOF
 )
 
-# Main loop
+case $1 in
+	"-h"|"--h"|"-help"|"--help"|"help")
+		echo "$help"
+		exit 0
+		;;
+	"")
+		echo "No option specified. Use 'copr help' for more information."
+		exit 1
+		;;
+esac
 
+# Main loop
 if [[ "$1" == "enable" ]]; then
 	while true; do
 		read -p "$question" yn
@@ -135,7 +142,4 @@ elif [[ "$1" == "enable" ]]; then
 	&& echo "Repository $author/$repo_name enabled" \
 	|| echo "Already enabled or repo not found."
 
-# display the help
-elif [[ "$1" == "-h" || "$1" == "--h" || "$1" == "-help" || "$1" == "--help" || "$1" == "help" ]]; then
- 	echo "$help"
 fi
